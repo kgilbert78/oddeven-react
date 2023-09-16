@@ -2,10 +2,13 @@ export const isOddDay = (date) => date.getDate() % 2 === 1;
 
 export const determineParkingSide = () => {
 	const today = new Date();
-	const yesterday = new Date();
-	yesterday.setDate(today.getDate() - 1);
+	// const yesterday = new Date();
+	// yesterday.setDate(today.getDate() - 1);
+	const tomorrow = new Date();
+	tomorrow.setDate(today.getDate() + 1);
 
-	const isFoolsDay = isOddDay(today) && isOddDay(yesterday);
+	// const isFoolsDay = isOddDay(today) && isOddDay(yesterday);
+	const isFoolsDay = isOddDay(today) && isOddDay(tomorrow);
 
 	const isAfterSwitch = today.getHours() >= 18;
 	const isBeforeSwitch = today.getHours() < 18;
