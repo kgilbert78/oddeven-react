@@ -1,4 +1,4 @@
-import { isFoolsDay } from "./determineParkingSide";
+import { isFoolsDay, isOddDay, calculateSwitchTime } from "./determineParkingSide";
 
 // How to test with mock dates:
 // https://medium.com/@dfriyia/simple-date-testing-with-jest-and-javascript-b8091a77a933
@@ -23,12 +23,14 @@ describe('isFoolsDay', () => {
 
   it('should return false if it is an odd day mid-month', () => {
     const mockDateObject = new Date('2023-10-19T11:42:16.652Z');
+    console.log('mockDateObject 10-19', mockDateObject); // 2023-10-19T11:42:16.652Z
     const spy = jest
       // https://jestjs.io/docs/jest-object#jestspyonobject-methodname
       .spyOn(global, 'Date')
       .mockImplementation(() => mockDateObject);
 
     const testFoolsDay = isFoolsDay();
+    console.log('mockDateObject 10-19 after testFoolsDay', mockDateObject); // 2023-10-20T11:42:16.652Z
     spy.mockRestore();
     expect(testFoolsDay).toEqual(false);
   });
@@ -36,14 +38,33 @@ describe('isFoolsDay', () => {
   // THIS ONE FAILS
   it('should return false on even final days of the month', () => {
     const mockDateObject = new Date('2023-09-30T11:42:16.652Z');
+    console.log('mockDateObject 9-30', mockDateObject); // 2023-09-30T11:42:16.652Z
     const spy = jest
       .spyOn(global, 'Date')
       .mockImplementation(() => mockDateObject);
     const testFoolsDay = isFoolsDay();
+    // console.log('isFoolsDay', isFoolsDay()) // false
+    // console.log(testFoolsDay); // true
+    console.log('mockDateObject 9-30 after testFoolsDay', mockDateObject); // 2023-10-02T11:42:16.652Z if i run isFoolsDay in console.log above, 2023-10-01T11:42:16.652Z if i don't
     spy.mockRestore();
-    expect(testFoolsDay).toEqual(false);
+    // expect(testFoolsDay).toEqual(false);
+    expect(testFoolsDay).toBe(false);
   });
 });
+
+// // this one errors "TypeError: Cannot read properties of undefined (reading 'getDate')"
+// // commented out because the error also makes the 'leap year day test' below fail
+// describe('isOddDay', () => {
+//   it('should return false on even final days of the month', () => {
+//     const mockDateObject = new Date('2023-09-30T11:42:16.652Z');
+//     const spy = jest
+//       .spyOn(global, 'Date')
+//       .mockImplementation(() => mockDateObject);
+//     const testOddDay = isOddDay();
+//     spy.mockRestore();
+//     expect(testOddDay).toEqual(false);
+//   });
+// });
 
 
 // February has 29 days in leap years (ie. 2020, 2024)
@@ -80,8 +101,50 @@ describe('leap year day test', () => {
   });
 });
 
-// TEST THAT IT SWITCHES AT 6PM BUT DOESN'T ON FOOL'S DAYS
 
+// TEST THAT IT SWITCHES AT 6PM BUT DOESN'T ON FOOL'S DAYS
+describe('calculateSwitchTime', () => {
+  it('should not switch the same day at 6pm on fools days when time is before 6pm', () => {
+    const mockDateObject = new Date('2023-10-31T11:42:16.652Z');
+    const spy = jest.spyOn(global, 'Date').mockImplementation(() => mockDateObject);
+    const testSwitchTime = calculateSwitchTime();
+    spy.mockRestore();
+    expect(testSwitchTime).toEqual(new Date('2023-11-01T18:00:00.000Z'));
+    // fails because it's returning GMT not EST:
+    // Expected: 2023-11-01T18:00:00.000Z
+    // Received: 2023-11-01T22:00:00.000Z
+  });
+  it('should switch the same day at 6pm on regular odd days when time is before 6pm', () => {
+    const mockDateObject = new Date('2023-10-29T11:42:16.652Z');
+    const spy = jest.spyOn(global, 'Date').mockImplementation(() => mockDateObject);
+    const testSwitchTime = calculateSwitchTime();
+    spy.mockRestore();
+    expect(testSwitchTime).toEqual(new Date('2023-10-29T18:00:00.000Z'));
+    // returning GMT not EST, plus the wrong day:
+    // Expected: 2023-10-29T18:00:00.000Z
+    // Received: 2023-10-30T22:00:00.000Z
+  });
+  it('should switch the next day at 6pm on regular odd day after 6pm', () => {
+    const mockDateObject = new Date('2023-10-29T19:42:16.652Z');
+    const spy = jest.spyOn(global, 'Date').mockImplementation(() => mockDateObject);
+    const testSwitchTime = calculateSwitchTime();
+    spy.mockRestore();
+    expect(testSwitchTime).toEqual(new Date('2023-10-29T18:00:00.000Z'));
+    // returning GMT not EST, but correct day:
+    // Expected: 2023-10-29T18:00:00.000Z
+    // Received: 2023-10-30T22:00:00.000Z
+  });
+  it('should switch the same day at 6pm on even days when time is before 6pm', () => {
+    const mockDateObject = new Date('2023-10-28T11:42:16.652Z');
+    const spy = jest.spyOn(global, 'Date').mockImplementation(() => mockDateObject);
+    const testSwitchTime = calculateSwitchTime();
+    spy.mockRestore();
+    expect(testSwitchTime).toEqual(new Date('2023-10-28T18:00:00.000Z'));
+    // returning GMT not EST, plus the wrong day:
+    // Expected: 2023-10-28T18:00:00.000Z
+    // Received: 2023-10-29T22:00:00.000Z
+  });
+})
 
 // TEST TIME CHANGE FOR DAYLIGHT SAVINGS (March 12 & November 5, 2023 / March 10 & November 3, 2024)
 
