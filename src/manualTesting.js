@@ -1,15 +1,12 @@
 const testIsFoolsDay = (datestring) => {
   const today = new Date(datestring);
-  const yesterday = new Date();
+  const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
 
-  const tomorrow = new Date();
+  const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
 
   console.log('today:', today, typeof today);
-
-  // These 2 retain values from 1st run (9/29 & 10/1) for all 30th dates. 
-  // With June 26 they change to 9/25 & 9/27 (still September but June numbers) !!!
   console.log('yesterday:', yesterday, typeof yesterday);
   console.log('tomorrow:', tomorrow, typeof yesterday);
 
